@@ -1,7 +1,63 @@
-
-
-
 GO
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+-- bram814   09/02/2023   Validar Datos.
+-- =========================================================================================================================
+GO
+DROP PROCEDURE IF EXISTS practica1.PR6;
+GO
+CREATE PROCEDURE practica1.PR6
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- ===================== Usuarios: Firstanme =====================
+    BEGIN TRY
+         BEGIN TRANSACTION
+            ALTER TABLE practica1.Usuarios ADD CONSTRAINT CHK_COURSE_NAME CHECK (practica1.Usuarios.Firstname LIKE '%[a-zA-Z]%' AND practica1.Usuarios.Firstname NOT like '%[0-9]%');
+         COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+         ROLLBACK TRANSACTION;
+         INSERT INTO practica1.HistoryLog(Date, Description) values (getdate(), 'EXCEPTION: PR6 --> practica1.Usuarios.Firstname Invalido.');
+    END CATCH
+
+    -- ===================== Usuarios: Lastname =====================
+    BEGIN TRY
+         BEGIN TRANSACTION
+            ALTER TABLE practica1.Usuarios ADD CONSTRAINT CHK_COURSE_NAME CHECK (practica1.Usuarios.Lastname LIKE '%[a-zA-Z]%' AND practica1.Usuarios.Lastname NOT like '%[0-9]%');
+         COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+         ROLLBACK TRANSACTION;
+         INSERT INTO practica1.HistoryLog(Date, Description) values (getdate(), 'EXCEPTION: PR6 --> practica1.Usuarios.Lastname Invalido.');
+    END CATCH
+
+
+    -- ===================== COURSE: Name =====================
+    BEGIN TRY
+         BEGIN TRANSACTION
+            ALTER TABLE practica1.Course ADD CONSTRAINT CHK_COURSE_NAME CHECK (practica1.Course.Name LIKE '%[a-zA-Z]%' AND practica1.Course.Name NOT LIKE '%[0-9]%');
+         COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+         ROLLBACK TRANSACTION;
+         INSERT INTO practica1.HistoryLog(Date, Description) values (getdate(), 'EXCEPTION: PR6 --> practica1.Course.Name Invalido.');
+    END CATCH
+    -- ===================== COURSE: CreditsRequired =====================
+     BEGIN TRY
+         BEGIN TRANSACTION
+            ALTER TABLE practica1.Course ADD CONSTRAINT CHK_PersonAge CHECK (practica1.Course.CreditsRequired NOT LIKE '%[a-zA-Z]%' AND practica1.Course.CreditsRequired LIKE '%[0-9]%');
+         COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+         ROLLBACK TRANSACTION;
+         INSERT INTO practica1.HistoryLog(Date, Description) values (getdate(), 'EXCEPTION: PR6 --> practica1.Course.CreditsRequired Invalido.');
+    END CATCH
+END
+GO
+
 -- =========================================================================================================================
 -- Author    Fecha        Descripción
 -- =======   ==========   ==================================================================================================
