@@ -1,50 +1,8 @@
--- CREACIÓN DE CURSOS
--- PARAMETROS: NAME, CREDITSREQUIRED
---------------------------------------------------------------------------------
-GO
-DROP PROCEDURE IF EXISTS practica1.PR5;
-GO
-CREATE PROCEDURE practica1.PR5(@Name AS nvarchar(100),@CreditsRequired AS INT)
-AS
-    BEGIN
-        DECLARE @valor INT;
-        DECLARE @ValidacionName varchar(1);
-        DECLARE @ValidacionCredits varchar(1);
-
-        SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
-        EXEC practica1.PR6 @Name, 0, @ValidacionName OUTPUT;
-        EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
-            -- se valida el nombre del curso
-        IF @ValidacionName = 'V'
-        BEGIN
-                -- se valida los créditos
-            IF @ValidacionCredits = 'V'
-            BEGIN
-                -- se inserta el curso
-                INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
-                VALUES(@valor,@Name,@CreditsRequired);
-                PRINT 'El curso se ha creado correctamente'
-            END
-            ELSE
-            BEGIN
-                PRINT 'Los créditos no son válidos, solo debe contener números'
-            END
-        END
-        ELSE
-        BEGIN
-            PRINT 'El nombre no es válido, solo debe contener letras'
-        END
-    END
-
-EXEC practica1.PR5 'Filosofia', 10;
-
-    SELECT * FROM practica1.Course;
-    DELETE FROM practica1.Course;
---------------------------------------------------------------------------------
-
--- ASIGNACIÓN DE CURSOS
--- PARAMETROS: EMAIL, CODCOURSE
---------------------------------------------------------------------------------
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           17/02/2023   SIGNACIÓN DE CURSOS; PARAMETROS: EMAIL, CODCOURSE.
+-- =========================================================================================================================
 GO
 DROP PROCEDURE IF EXISTS practica1.PR3;
 GO
@@ -110,12 +68,55 @@ AS
 EXEC practica1.PR3 'lopez@gmail.com',3;
 
 
---------------------------------------------------------------------------------
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   CREACIÓN DE CURSOS; PARAMETROS: NAME, CREDITSREQUIREDs.
+-- =========================================================================================================================
 
--- TRIGGERS
---------------------------------------------------------------------------------
--- TABLA COURSE
---------------------------------------------------------------------------------
+GO
+DROP PROCEDURE IF EXISTS practica1.PR5;
+GO
+CREATE PROCEDURE practica1.PR5(@Name AS nvarchar(100),@CreditsRequired AS INT)
+AS
+    BEGIN
+        DECLARE @valor INT;
+        DECLARE @ValidacionName varchar(1);
+        DECLARE @ValidacionCredits varchar(1);
+
+        SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
+        EXEC practica1.PR6 @Name, 0, @ValidacionName OUTPUT;
+        EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
+            -- se valida el nombre del curso
+        IF @ValidacionName = 'V'
+        BEGIN
+                -- se valida los créditos
+            IF @ValidacionCredits = 'V'
+            BEGIN
+                -- se inserta el curso
+                INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
+                VALUES(@valor,@Name,@CreditsRequired);
+                PRINT 'El curso se ha creado correctamente'
+            END
+            ELSE
+            BEGIN
+                PRINT 'Los créditos no son válidos, solo debe contener números'
+            END
+        END
+        ELSE
+        BEGIN
+            PRINT 'El nombre no es válido, solo debe contener letras'
+        END
+    END
+
+-- EXEC practica1.PR5 'Filosofia', 10;
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           17/02/2023   TRIGGERS.
+-- =========================================================================================================================
 GO
 DROP TRIGGER IF EXISTS practica1.Insert_Course;
 GO
@@ -178,9 +179,11 @@ AS
         END CATCH
     END
 
---------------------------------------------------------------------------------
--- TABLA COURSEASSIGNMENT
---------------------------------------------------------------------------------
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           17/02/2023   TABLA COURSEASSIGNMENT.
+-- =========================================================================================================================
 GO
 DROP TRIGGER IF EXISTS practica1.Insert_CourseAssignment;
 GO
