@@ -7,39 +7,45 @@ GO
 CREATE PROCEDURE practica1.PR5(@Name AS nvarchar(100),@CreditsRequired AS INT)
 AS
     BEGIN
-        DECLARE @valor INT;
-        DECLARE @ValidacionName varchar(1);
-        DECLARE @ValidacionCredits varchar(1);
+        BEGIN TRANSACTION
+            DECLARE @valor INT;
+            DECLARE @ValidacionName varchar(1);
+            DECLARE @ValidacionCredits varchar(1);
 
-        SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
-        EXEC practica1.PR6 @Name, 0, @ValidacionName OUTPUT;
-        EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
-            -- se valida el nombre del curso
-        IF @ValidacionName = 'V'
-        BEGIN
-                -- se valida los créditos
-            IF @ValidacionCredits = 'V'
+            SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
+            EXEC practica1.PR6 @Name, -1, @ValidacionName OUTPUT;
+            EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
+                -- se valida el nombre del curso
+            IF @ValidacionName = 'V'
             BEGIN
-                -- se inserta el curso
-                INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
-                VALUES(@valor,@Name,@CreditsRequired);
-                PRINT 'El curso se ha creado correctamente'
+                    -- se valida los créditos
+                IF @ValidacionCredits = 'V'
+                BEGIN
+                    -- se inserta el curso
+                    INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
+                    VALUES(@valor,@Name,@CreditsRequired);
+                    COMMIT TRANSACTION;
+                    PRINT 'El curso se ha creado correctamente'
+                END
+                ELSE
+                BEGIN
+                    ROLLBACK TRANSACTION;
+                    INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                    VALUES (GETDATE(),'PR5: No se ha creado el curso, los créditos no son válidos, solo debe contener números');
+                    PRINT 'Los créditos no son válidos, solo debe contener números'
+                END
             END
             ELSE
             BEGIN
-                PRINT 'Los créditos no son válidos, solo debe contener números'
+                ROLLBACK TRANSACTION;
+                INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                VALUES (GETDATE(),'PR5: No se ha creado el curso, el nombre no es válido, solo debe contener letras');
+                PRINT 'El nombre no es válido, solo debe contener letras'
             END
-        END
-        ELSE
-        BEGIN
-            PRINT 'El nombre no es válido, solo debe contener letras'
-        END
     END
 
-EXEC practica1.PR5 'Filosofia', 10;
+EXEC practica1.PR5 'Economia', 1;
 
-    SELECT * FROM practica1.Course;
-    DELETE FROM practica1.Course;
 --------------------------------------------------------------------------------
 
 -- ASIGNACIÓN DE CURSOS
@@ -51,59 +57,76 @@ GO
 CREATE PROCEDURE practica1.PR3(@Email As nvarchar(100),@CodCourse AS INT)
 AS
     BEGIN
-        -- VARIABLES
-        DECLARE @Creditos INT;
-        DECLARE @CreditosReq INT;
-        DECLARE @UserStudent uniqueidentifier;
-        DECLARE @UserTutor uniqueidentifier;
-        DECLARE @CodCurso nvarchar(10);
+        BEGIN TRANSACTION
 
-        -- OBTENER CREDITOS DEL USUARIO
-        SELECT @Creditos = p.Credits
-        FROM practica1.ProfileStudent p
-        INNER JOIN practica1.Usuarios u  on u.Id = p.UserId
-        WHERE u.Email = @Email;
+            -- VARIABLES
+            DECLARE @Creditos INT;
+            DECLARE @CreditosReq INT;
+            DECLARE @UserStudent uniqueidentifier;
+            DECLARE @UserTutor uniqueidentifier;
+            DECLARE @CodCurso nvarchar(10);
 
-        -- OBTENER CREDITOS REQUERIDOS
-        SELECT @CreditosReq = c.CreditsRequired
-        FROM practica1.Course c
-        WHERE c.CodCourse = @CodCourse;
+            -- OBTENER CREDITOS DEL USUARIO
+            SELECT @Creditos = p.Credits
+            FROM practica1.ProfileStudent p
+            INNER JOIN practica1.Usuarios u  on u.Id = p.UserId
+            WHERE u.Email = @Email;
 
-        -- VALIDAR ASIGNACIÓN
-        IF @Creditos >= @CreditosReq
-            BEGIN
-            -- OBTENER ID STUDENT
-            SELECT @UserStudent = e.Id
-            FROM practica1.Usuarios e
-            WHERE e.Email = @Email;
-
-            -- OBTENER ID TUTOR
-            SELECT @UserTutor = t.Id
-            FROM practica1.Usuarios t
-            INNER JOIN practica1.CourseTutor ct ON t.Id = ct.TutorId
-            INNER JOIN practica1.Course c ON ct.CourseCodCourse = c.CodCourse
+            -- OBTENER CREDITOS REQUERIDOS
+            SELECT @CreditosReq = c.CreditsRequired
+            FROM practica1.Course c
             WHERE c.CodCourse = @CodCourse;
 
-            -- ASIGNAR
-            INSERT INTO practica1.CourseAssignment (StudentId, CourseCodCourse)
-            VALUES (@UserStudent,@CodCourse);
-            PRINT 'Se ha asignado el curso correctamente'
+            -- VALIDAR ASIGNACIÓN
+            IF @Creditos >= @CreditosReq
+                BEGIN
+                    IF (SELECT EmailConfirmed FROM practica1.Usuarios WHERE Email = @Email) = 1
+                        BEGIN
+                        -- OBTENER ID STUDENT
+                        SELECT @UserStudent = e.Id
+                        FROM practica1.Usuarios e
+                        WHERE e.Email = @Email;
 
-            -- NOTIFICAR A ESTUDIANTE
-            SET @CodCurso = CAST(@CodCourse AS nvarchar(10));
-            INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
-            VALUES(@UserStudent,'Se le ha asignado el curso',GETDATE());
-            PRINT 'Se le ha asignado el curso'
+                        -- OBTENER ID TUTOR
+                        SELECT @UserTutor = t.Id
+                        FROM practica1.Usuarios t
+                        INNER JOIN practica1.CourseTutor ct ON t.Id = ct.TutorId
+                        INNER JOIN practica1.Course c ON ct.CourseCodCourse = c.CodCourse
+                        WHERE c.CodCourse = @CodCourse;
 
-            -- NOTIFICAR A TUTOR
-            INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
-            VALUES(@UserTutor,'Se le ha asignado 1 estudiante mas en el curso',GETDATE());
-            PRINT 'Se le ha asignado 1 estudiante mas en el curso'
-            END
-        ELSE
-            BEGIN
-            PRINT 'No tiene los créditos suficientes para asignar el curso'
-            END
+                        -- ASIGNAR
+                        INSERT INTO practica1.CourseAssignment (StudentId, CourseCodCourse)
+                        VALUES (@UserStudent,@CodCourse);
+                        COMMIT TRANSACTION;
+                        PRINT 'Se ha asignado el curso correctamente'
+
+                        -- NOTIFICAR A ESTUDIANTE
+                        SET @CodCurso = CAST(@CodCourse AS nvarchar(10));
+                        INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
+                        VALUES(@UserStudent,'Se le ha asignado el curso',GETDATE());
+                        PRINT 'Se le ha asignado el curso'
+
+                        -- NOTIFICAR A TUTOR
+                        INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
+                        VALUES(@UserTutor,'Se le ha asignado 1 estudiante mas en el curso',GETDATE());
+                        PRINT 'Se le ha asignado 1 estudiante mas en el curso'
+                    END
+                    ELSE
+                        BEGIN
+                            ROLLBACK TRANSACTION;
+                            INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                            VALUES (GETDATE(), N'PR3: El usuario no ha sido confirmado');
+                            PRINT N'El usuario no ha sido confirmado';
+                        END
+
+                END
+            ELSE
+                BEGIN
+                    ROLLBACK TRANSACTION;
+                    INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                    VALUES (GETDATE(),'PR3: No tiene los créditos suficientes para asignar el curso');
+                    PRINT 'No tiene los créditos suficientes para asignar el curso'
+                END
 
     END
 
