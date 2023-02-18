@@ -76,7 +76,7 @@ CREATE PROCEDURE practica1.PR1
             --PROCESO PARA VALIDACION DE DATOS
             DECLARE @validacionFirstName varchar(1);
             DECLARE @validacionLastName varchar(1);
-            EXEC practica1.PR6 @first_name,  0,  @validacionFirstName OUTPUT ;
+            EXEC practica1.PR6 @first_name,  -1,  @validacionFirstName OUTPUT ;
             EXEC practica1.PR6 @last_name, 0,  @validacionLastName OUTPUT;
             
             -- PRIMERO VERIFICO FIRSTNAME
@@ -269,6 +269,32 @@ AS
     END
 
 EXEC practica1.PR3 'lopez@gmail.com',3;
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   PR4.
+-- =========================================================================================================================
+GO
+DROP PROCEDURE IF EXISTS practica1.PR4;
+GO
+CREATE PROCEDURE practica1.PR4
+    @RoleName nvarchar(max)
+AS BEGIN
+    BEGIN TRANSACTION
+        BEGIN TRY
+
+            INSERT INTO practica1.Roles(Id, RoleName) values (newid(), @RoleName);
+            COMMIT TRANSACTION;
+            PRINT N'Se ah Creo el Nuevo Rol';
+        END TRY
+        BEGIN CATCH
+            ROLLBACK TRANSACTION;
+            INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Transacción fallida');
+            PRINT N'Transaccion fallida, ocurrió un error inesperado.';
+        END CATCH
+END;
+
 
 
 -- =========================================================================================================================
@@ -702,6 +728,68 @@ AS
             PRINT 'Error al insertar en la tabla HistoryLog'
         END CATCH
     END
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           17/02/2023   TRIGGER PR4.
+-- =========================================================================================================================
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_insertar;
+GO
+CREATE TRIGGER practica1.trigg_role_insertar
+on practica1.Roles
+FOR insert
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Transacción creacion de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_delete;
+GO
+CREATE TRIGGER practica1.trigg_role_delete
+on practica1.Roles
+AFTER DELETE
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Eliminación de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_update;
+GO
+CREATE TRIGGER practica1.trigg_role_update
+on practica1.Roles
+AFTER UPDATE
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Actualización de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
 
 -- =========================================================================================================================
 -- Author    Fecha        Descripción
