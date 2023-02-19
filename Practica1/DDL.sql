@@ -76,7 +76,7 @@ CREATE PROCEDURE practica1.PR1
             --PROCESO PARA VALIDACION DE DATOS
             DECLARE @validacionFirstName varchar(1);
             DECLARE @validacionLastName varchar(1);
-            EXEC practica1.PR6 @first_name,  0,  @validacionFirstName OUTPUT ;
+            EXEC practica1.PR6 @first_name,  -1,  @validacionFirstName OUTPUT ;
             EXEC practica1.PR6 @last_name, 0,  @validacionLastName OUTPUT;
             
             -- PRIMERO VERIFICO FIRSTNAME
@@ -212,63 +212,106 @@ GO
 CREATE PROCEDURE practica1.PR3(@Email As nvarchar(100),@CodCourse AS INT)
 AS
     BEGIN
-        -- VARIABLES
-        DECLARE @Creditos INT;
-        DECLARE @CreditosReq INT;
-        DECLARE @UserStudent uniqueidentifier;
-        DECLARE @UserTutor uniqueidentifier;
-        DECLARE @CodCurso nvarchar(10);
+        BEGIN TRANSACTION
 
-        -- OBTENER CREDITOS DEL USUARIO
-        SELECT @Creditos = p.Credits
-        FROM practica1.ProfileStudent p
-        INNER JOIN practica1.Usuarios u  on u.Id = p.UserId
-        WHERE u.Email = @Email;
+            -- VARIABLES
+            DECLARE @Creditos INT;
+            DECLARE @CreditosReq INT;
+            DECLARE @UserStudent uniqueidentifier;
+            DECLARE @UserTutor uniqueidentifier;
+            DECLARE @CodCurso nvarchar(10);
 
-        -- OBTENER CREDITOS REQUERIDOS
-        SELECT @CreditosReq = c.CreditsRequired
-        FROM practica1.Course c
-        WHERE c.CodCourse = @CodCourse;
+            -- OBTENER CREDITOS DEL USUARIO
+            SELECT @Creditos = p.Credits
+            FROM practica1.ProfileStudent p
+            INNER JOIN practica1.Usuarios u  on u.Id = p.UserId
+            WHERE u.Email = @Email;
 
-        -- VALIDAR ASIGNACIÓN
-        IF @Creditos >= @CreditosReq
-            BEGIN
-            -- OBTENER ID STUDENT
-            SELECT @UserStudent = e.Id
-            FROM practica1.Usuarios e
-            WHERE e.Email = @Email;
-
-            -- OBTENER ID TUTOR
-            SELECT @UserTutor = t.Id
-            FROM practica1.Usuarios t
-            INNER JOIN practica1.CourseTutor ct ON t.Id = ct.TutorId
-            INNER JOIN practica1.Course c ON ct.CourseCodCourse = c.CodCourse
+            -- OBTENER CREDITOS REQUERIDOS
+            SELECT @CreditosReq = c.CreditsRequired
+            FROM practica1.Course c
             WHERE c.CodCourse = @CodCourse;
 
-            -- ASIGNAR
-            INSERT INTO practica1.CourseAssignment (StudentId, CourseCodCourse)
-            VALUES (@UserStudent,@CodCourse);
-            PRINT 'Se ha asignado el curso correctamente'
+            -- VALIDAR ASIGNACIÓN
+            IF @Creditos >= @CreditosReq
+                BEGIN
+                    IF (SELECT EmailConfirmed FROM practica1.Usuarios WHERE Email = @Email) = 1
+                        BEGIN
+                        -- OBTENER ID STUDENT
+                        SELECT @UserStudent = e.Id
+                        FROM practica1.Usuarios e
+                        WHERE e.Email = @Email;
 
-            -- NOTIFICAR A ESTUDIANTE
-            SET @CodCurso = CAST(@CodCourse AS nvarchar(10));
-            INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
-            VALUES(@UserStudent,'Se le ha asignado el curso',GETDATE());
-            PRINT 'Se le ha asignado el curso'
+                        -- OBTENER ID TUTOR
+                        SELECT @UserTutor = t.Id
+                        FROM practica1.Usuarios t
+                        INNER JOIN practica1.CourseTutor ct ON t.Id = ct.TutorId
+                        INNER JOIN practica1.Course c ON ct.CourseCodCourse = c.CodCourse
+                        WHERE c.CodCourse = @CodCourse;
 
-            -- NOTIFICAR A TUTOR
-            INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
-            VALUES(@UserTutor,'Se le ha asignado 1 estudiante mas en el curso',GETDATE());
-            PRINT 'Se le ha asignado 1 estudiante mas en el curso'
-            END
-        ELSE
-            BEGIN
-            PRINT 'No tiene los créditos suficientes para asignar el curso'
-            END
+                        -- ASIGNAR
+                        INSERT INTO practica1.CourseAssignment (StudentId, CourseCodCourse)
+                        VALUES (@UserStudent,@CodCourse);
+                        COMMIT TRANSACTION;
+                        PRINT 'Se ha asignado el curso correctamente'
+
+                        -- NOTIFICAR A ESTUDIANTE
+                        SET @CodCurso = CAST(@CodCourse AS nvarchar(10));
+                        INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
+                        VALUES(@UserStudent,'Se le ha asignado el curso',GETDATE());
+                        PRINT 'Se le ha asignado el curso'
+
+                        -- NOTIFICAR A TUTOR
+                        INSERT INTO practica1.Notification (practica1.Notification.UserId, practica1.Notification.Message, practica1.Notification.Date)
+                        VALUES(@UserTutor,'Se le ha asignado 1 estudiante mas en el curso',GETDATE());
+                        PRINT 'Se le ha asignado 1 estudiante mas en el curso'
+                    END
+                    ELSE
+                        BEGIN
+                            ROLLBACK TRANSACTION;
+                            INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                            VALUES (GETDATE(), N'PR3: El usuario no ha sido confirmado');
+                            PRINT N'El usuario no ha sido confirmado';
+                        END
+
+                END
+            ELSE
+                BEGIN
+                    ROLLBACK TRANSACTION;
+                    INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                    VALUES (GETDATE(),'PR3: No tiene los créditos suficientes para asignar el curso');
+                    PRINT 'No tiene los créditos suficientes para asignar el curso'
+                END
 
     END
 
-EXEC practica1.PR3 'lopez@gmail.com',3;
+--EXEC practica1.PR3 'lopez@gmail.com',3;
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   PR4.
+-- =========================================================================================================================
+GO
+DROP PROCEDURE IF EXISTS practica1.PR4;
+GO
+CREATE PROCEDURE practica1.PR4
+    @RoleName nvarchar(max)
+AS BEGIN
+    BEGIN TRANSACTION
+        BEGIN TRY
+
+            INSERT INTO practica1.Roles(Id, RoleName) values (newid(), @RoleName);
+            COMMIT TRANSACTION;
+            PRINT N'Se ah Creo el Nuevo Rol';
+        END TRY
+        BEGIN CATCH
+            ROLLBACK TRANSACTION;
+            INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Transacción fallida');
+            PRINT N'Transaccion fallida, ocurrió un error inesperado.';
+        END CATCH
+END;
+
 
 
 -- =========================================================================================================================
@@ -283,35 +326,42 @@ GO
 CREATE PROCEDURE practica1.PR5(@Name AS nvarchar(100),@CreditsRequired AS INT)
 AS
     BEGIN
-        DECLARE @valor INT;
-        DECLARE @ValidacionName varchar(1);
-        DECLARE @ValidacionCredits varchar(1);
+        BEGIN TRANSACTION
+            DECLARE @valor INT;
+            DECLARE @ValidacionName varchar(1);
+            DECLARE @ValidacionCredits varchar(1);
 
-        SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
-        EXEC practica1.PR6 @Name, 0, @ValidacionName OUTPUT;
-        EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
-            -- se valida el nombre del curso
-        IF @ValidacionName = 'V'
-        BEGIN
-                -- se valida los créditos
-            IF @ValidacionCredits = 'V'
+            SET @valor = (SELECT ISNULL(MAX(practica1.Course.CodCourse),0)+1 FROM practica1.Course);
+            EXEC practica1.PR6 @Name, -1, @ValidacionName OUTPUT;
+            EXEC practica1.PR6 @CreditsRequired, 1, @ValidacionCredits OUTPUT;
+                -- se valida el nombre del curso
+            IF @ValidacionName = 'V'
             BEGIN
-                -- se inserta el curso
-                INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
-                VALUES(@valor,@Name,@CreditsRequired);
-                PRINT 'El curso se ha creado correctamente'
+                    -- se valida los créditos
+                IF @ValidacionCredits = 'V'
+                BEGIN
+                    -- se inserta el curso
+                    INSERT INTO practica1.Course (practica1.Course.CodCourse, practica1.Course.Name, practica1.Course.CreditsRequired)
+                    VALUES(@valor,@Name,@CreditsRequired);
+                    COMMIT TRANSACTION;
+                    PRINT 'El curso se ha creado correctamente'
+                END
+                ELSE
+                BEGIN
+                    ROLLBACK TRANSACTION;
+                    INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                    VALUES (GETDATE(),'PR5: No se ha creado el curso, los créditos no son válidos, solo debe contener números');
+                    PRINT 'Los créditos no son válidos, solo debe contener números'
+                END
             END
             ELSE
             BEGIN
-                PRINT 'Los créditos no son válidos, solo debe contener números'
+                ROLLBACK TRANSACTION;
+                INSERT INTO practica1.HistoryLog (practica1.HistoryLog.Date, practica1.HistoryLog.Description)
+                VALUES (GETDATE(),'PR5: No se ha creado el curso, el nombre no es válido, solo debe contener letras');
+                PRINT 'El nombre no es válido, solo debe contener letras'
             END
-        END
-        ELSE
-        BEGIN
-            PRINT 'El nombre no es válido, solo debe contener letras'
-        END
     END
-
 -- EXEC practica1.PR5 'Filosofia', 10;
 
 
@@ -703,6 +753,68 @@ AS
         END CATCH
     END
 
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           17/02/2023   TRIGGER PR4.
+-- =========================================================================================================================
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_insertar;
+GO
+CREATE TRIGGER practica1.trigg_role_insertar
+on practica1.Roles
+FOR insert
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Transacción creacion de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_delete;
+GO
+CREATE TRIGGER practica1.trigg_role_delete
+on practica1.Roles
+AFTER DELETE
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Eliminación de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
+GO
+DROP TRIGGER IF EXISTS practica1.trigg_role_update;
+GO
+CREATE TRIGGER practica1.trigg_role_update
+on practica1.Roles
+AFTER UPDATE
+as BEGIN
+      BEGIN TRY
+          BEGIN TRANSACTION
+          INSERT INTO practica1.HistoryLog (Date, Description) VALUES (GETDATE(), N'PR4: Actualización de rol exitosa.');
+          COMMIT TRANSACTION;
+      END TRY
+      BEGIN CATCH
+          ROLLBACK TRANSACTION;
+          PRINT N'ERROR, OCURRIO UN ERROR INESPERADO';
+      END CATCH
+END;
+
+
 -- =========================================================================================================================
 -- Author    Fecha        Descripción
 -- =======   ==========   ==================================================================================================
@@ -767,3 +879,189 @@ AS
             PRINT 'Error al insertar en la tabla HistoryLog'
         END CATCH
     END
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F1.
+-- =========================================================================================================================
+
+
+GO
+DROP FUNCTION IF EXISTS practica1.F1;
+go
+CREATE FUNCTION practica1.F1
+(
+ @CodCourse int
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    SELECT
+         c.Id                   ID_COURSE
+        ,co.Name
+        ,Co.CreditsRequired
+        ,u.Firstname
+        ,u.Lastname
+        ,u.Email
+        ,s.Credits              CREDITS
+    FROM practica1.CourseAssignment c
+    INNER JOIN practica1.Course co on co.CodCourse = c.CourseCodCourse
+    INNER JOIN practica1.ProfileStudent s on s.UserId = c.StudentId
+    INNER JOIN practica1.Usuarios U on s.UserId = U.Id
+    WHERE c.CourseCodCourse = @CodCourse
+)
+go
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F2.
+-- =========================================================================================================================
+
+GO
+DROP FUNCTION IF EXISTS practica1.F2;
+go
+CREATE FUNCTION practica1.F2
+(
+    @TutorCode uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+    select
+         co.CodCourse
+        ,co.Name
+        ,u.Firstname
+        ,u.Lastname
+        ,u.Email
+    from practica1.CourseTutor ct
+    inner join practica1.Course co on co.CodCourse = ct.CourseCodCourse
+    inner join practica1.TutorProfile t on t.UserId = ct.TutorId
+    inner join practica1.Usuarios u on u.Id = t.UserId
+    where u.Id = @TutorCode
+)
+go
+
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F3.
+-- =========================================================================================================================
+
+
+GO
+DROP FUNCTION IF EXISTS practica1.F3;
+go
+CREATE FUNCTION practica1.F3
+(
+    @Id uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    select
+
+         n.Id       as  'ID_Notificacion'
+        ,n.Message
+        ,n.Date
+        ,p.Id
+        ,p.UserId
+        ,p.Credits
+        ,u.Lastname
+        ,u.Firstname
+    from
+        practica1.Notification n
+    inner join practica1.ProfileStudent p on n.UserId = p.UserId
+    inner join practica1.Usuarios u on u.Id = p.UserId
+    where u.id = @Id
+)
+go
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F4.
+-- =========================================================================================================================
+go
+DROP FUNCTION IF EXISTS practica1.F4;
+go
+
+CREATE FUNCTION practica1.F4()
+RETURNS @resultado TABLE
+(
+     Id  INT
+    ,Date  datetime2
+    ,Description  nvarchar(max)
+)
+AS
+BEGIN
+
+
+    INSERT INTO @resultado
+    select
+         Id
+        ,Date
+        ,Description
+    from practica1.HistoryLog
+
+   /*** IF @@ROWCOUNT > 0
+    BEGIN
+       -- COMMIT;
+    END
+    ELSE
+    BEGIN
+       -- ROLLBACK ;
+    END***/
+
+    RETURN
+END
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F5.
+-- =========================================================================================================================
+
+
+GO
+DROP FUNCTION IF EXISTS practica1.F5;
+GO
+CREATE FUNCTION practica1.F5
+(
+    @Id uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    select
+    u.Id        AS 'ID_USUARIO'
+    ,u.Firstname
+    ,u.Lastname
+    ,u.Email
+    ,u.EmailConfirmed
+    ,u.DateOfBirth
+    ,ps.Credits
+    ,r.Id       as 'ID_ROL'
+    ,r.RoleName
+
+from practica1.Usuarios u
+inner join practica1.UsuarioRole ur on ur.UserId = u.Id
+inner join practica1.Roles r on r.Id = ur.RoleId
+inner join practica1.ProfileStudent ps on ps.UserId = ur.UserId
+WHERE u.id = @Id
+
+)
+go
