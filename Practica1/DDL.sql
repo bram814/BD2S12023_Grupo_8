@@ -879,3 +879,144 @@ AS
             PRINT 'Error al insertar en la tabla HistoryLog'
         END CATCH
     END
+
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F1.
+-- =========================================================================================================================
+
+
+GO
+DROP FUNCTION IF EXISTS practica1.F1;
+go
+CREATE FUNCTION practica1.F1
+(
+ @CodCourse int
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    SELECT
+         c.Id                   ID_COURSE
+        ,c.CourseCodCourse      COURSE_COD_COURSE
+        ,c.StudentId            STUDEND_ID
+        ,s.Id                   ID_USER
+        ,s.UserId               USER_ID
+        ,s.Credits              CREDITS
+    FROM practica1.CourseAssignment c
+    LEFT JOIN practica1.ProfileStudent s on s.UserId = c.StudentId
+    WHERE c.CourseCodCourse = @CodCourse
+)
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F2.
+-- =========================================================================================================================
+
+GO
+DROP FUNCTION IF EXISTS practica1.F2;
+go
+CREATE FUNCTION practica1.F2
+(
+    @TutorCode uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+    select
+         c.CodCourse
+        ,c.Name
+        ,c.CreditsRequired
+        ,t.Id
+        ,u.Firstname
+        ,u.Lastname
+        ,t.UserId
+        ,t.TutorCode
+    from practica1.CourseAssignment ca
+    inner join practica1.Course c on c.CodCourse = ca.CourseCodCourse
+    inner join practica1.CourseTutor ct on ct.CourseCodCourse = c.CodCourse
+    inner join practica1.Usuarios u on ca.StudentId = u.Id
+    inner join practica1.TutorProfile t on t.UserId = u.Id
+    where t.UserId = @TutorCode
+)
+go
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F3.
+-- =========================================================================================================================
+
+
+GO
+DROP FUNCTION IF EXISTS practica1.F3;
+go
+CREATE FUNCTION practica1.F3
+(
+    @Id uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    select
+
+         n.Id       as  'ID_Notificacion'
+        ,n.Message
+        ,n.Date
+        ,p.Id
+        ,p.UserId
+        ,p.Credits
+        ,u.Lastname
+        ,u.Firstname
+    from
+        practica1.Notification n
+    inner join practica1.ProfileStudent p on n.UserId = p.UserId
+    inner join practica1.Usuarios u on u.Id = p.UserId
+    where u.id = @Id
+)
+go
+
+-- =========================================================================================================================
+-- Author    Fecha        Descripción
+-- =======   ==========   ==================================================================================================
+--           18/02/2023   F5.
+-- =========================================================================================================================
+
+
+DROP FUNCTION IF EXISTS practica1.F5;
+go
+
+CREATE FUNCTION practica1.F5
+(
+    @Id uniqueidentifier
+)
+RETURNS TABLE
+AS
+RETURN
+(
+
+    select
+     u.Firstname
+    ,u.Lastname
+    ,u.Email
+    ,u.DateOfBirth
+    ,ps.Credits
+    ,r.RoleName
+
+from practica1.Usuarios u
+inner join practica1.UsuarioRole ur on ur.UserId = u.Id
+inner join practica1.Roles r on r.Id = ur.RoleId
+inner join practica1.ProfileStudent ps on ps.UserId = ur.UserId
+WHERE u.id = @Id
+
+)
+go
+
