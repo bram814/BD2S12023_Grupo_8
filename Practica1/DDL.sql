@@ -902,15 +902,20 @@ RETURN
 
     SELECT
          c.Id                   ID_COURSE
-        ,c.CourseCodCourse      COURSE_COD_COURSE
-        ,c.StudentId            STUDEND_ID
-        ,s.Id                   ID_USER
-        ,s.UserId               USER_ID
+        ,co.Name
+        ,Co.CreditsRequired
+        ,u.Firstname
+        ,u.Lastname
+        ,u.Email
         ,s.Credits              CREDITS
     FROM practica1.CourseAssignment c
-    LEFT JOIN practica1.ProfileStudent s on s.UserId = c.StudentId
+    INNER JOIN practica1.Course co on co.CodCourse = c.CourseCodCourse
+    INNER JOIN practica1.ProfileStudent s on s.UserId = c.StudentId
+    INNER JOIN practica1.Usuarios U on s.UserId = U.Id
     WHERE c.CourseCodCourse = @CodCourse
 )
+go
+
 
 -- =========================================================================================================================
 -- Author    Fecha        Descripción
@@ -930,22 +935,20 @@ AS
 RETURN
 (
     select
-         c.CodCourse
-        ,c.Name
-        ,c.CreditsRequired
-        ,t.Id
+         co.CodCourse
+        ,co.Name
         ,u.Firstname
         ,u.Lastname
-        ,t.UserId
-        ,t.TutorCode
-    from practica1.CourseAssignment ca
-    inner join practica1.Course c on c.CodCourse = ca.CourseCodCourse
-    inner join practica1.CourseTutor ct on ct.CourseCodCourse = c.CodCourse
-    inner join practica1.Usuarios u on ca.StudentId = u.Id
-    inner join practica1.TutorProfile t on t.UserId = u.Id
-    where t.UserId = @TutorCode
+        ,u.Email
+    from practica1.CourseTutor ct
+    inner join practica1.Course co on co.CodCourse = ct.CourseCodCourse
+    inner join practica1.TutorProfile t on t.UserId = ct.TutorId
+    inner join practica1.Usuarios u on u.Id = t.UserId
+    where u.Id = @TutorCode
 )
 go
+
+
 
 -- =========================================================================================================================
 -- Author    Fecha        Descripción
@@ -1031,9 +1034,9 @@ END
 -- =========================================================================================================================
 
 
+GO
 DROP FUNCTION IF EXISTS practica1.F5;
-go
-
+GO
 CREATE FUNCTION practica1.F5
 (
     @Id uniqueidentifier
@@ -1044,11 +1047,14 @@ RETURN
 (
 
     select
-     u.Firstname
+    u.Id        AS 'ID_USUARIO'
+    ,u.Firstname
     ,u.Lastname
     ,u.Email
+    ,u.EmailConfirmed
     ,u.DateOfBirth
     ,ps.Credits
+    ,r.Id       as 'ID_ROL'
     ,r.RoleName
 
 from practica1.Usuarios u
@@ -1059,4 +1065,3 @@ WHERE u.id = @Id
 
 )
 go
-
