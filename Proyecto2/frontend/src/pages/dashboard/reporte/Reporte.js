@@ -13,7 +13,7 @@ function Reporte(props){
     }, []);
 
     return (
-        <div className="container">
+        <div className="">
             <br /><br /><br />
             <Tabs />
             <br /><br /><br />

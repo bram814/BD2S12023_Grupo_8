@@ -6,7 +6,7 @@ function Breadcrumbs(props) {
     return (
         <div className="">
             <nav className="blue lighten-2">
-                <div className="container nav-wrapper">
+                <div className="nav-wrapper" style={{marginLeft:'10px'}}>
                     <div className="col s12">
                         { props.breadcrumbs.map(a => {
                             return (

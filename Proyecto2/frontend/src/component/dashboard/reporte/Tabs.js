@@ -1,9 +1,22 @@
 import M from '@materializecss/materialize/dist/js/materialize.min';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import PieChart from './PieChart';
 
 const Tabs = () => {
 
+    const [reporte, setReporte] = useState(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
 
+    const [selectReport, setSelectReporte] = useState(null);
+
+    var data = [
+        ['Chrome', 100.41],
+        ['Firefox', 10.85],
+        ['Internet Explorer', 7.05],
+        ['Safari', 4.67],
+        ['Edge', 4.18],
+        ['Opera', 1.64],
+        ['Otros', 0.2]
+    ];
 
     useEffect(() => {
         M.AutoInit();
@@ -11,34 +24,53 @@ const Tabs = () => {
         M.Tabs.init(tabs);
     }, []);
 
+
+    function handleChangeReporte(e){
+        setSelectReporte(e.target.value);
+    }
+
     return (
-    
-        <div className="row">
-            <div className="col s12">
-                <ul className="tabs tabs-fixed-width tab-demo z-depth-1 ">
 
-                    <li className="tab col s2">
+        <div className="row" >
+            <div className="col s12 m2 l2">
+                <div className="row">
+                    <div class="input-field col s12 m12 l12">
+                        <select>
+                            <option value="" selected>Base de Datos</option>
+                            <option value="1">MySQL</option>
+                            <option value="2">MongoDB</option>
+                            <option value="3">Cassandra</option>
+                            <option value="4">Redis</option>
+                        </select>
+                    </div>
 
-                       <a href="#test1"><i className="material-icons">add</i></a>
-                    </li>
-
-                    <li className="tab col s3">
-                        <a href="#test2"><i className="material-icons">search</i></a>
-                    </li>
-
-                </ul>
-            </div>
-            <br/><br/><br/><br/><br/>
-            <div className="row">
-
-                <div id="test1" className="col s10 m12">
-                    <h5>Reporte 1</h5>
                 </div>
-                <div id="test2" className="col s10 m12">
-                    <h5>Reporte 2</h5>
+                <div className="row" >
+                    <div class="input-field col s12" >  
+                    <select className="" onChange={handleChangeReporte}>
+                            <option value="" selected>Reporte</option>
+                            {reporte.map(i => (
+                                <option key={i} value={i}>{`Reporte ${i}`}</option>
+                            ))}
+                        </select>
+                    </div>
+
                 </div>
-               
+                <div className='row center'>
+
+
+                <a class="btn-floating btn-large waves-effect waves-light blue"><i class="material-icons">search</i></a>
+                </div>
             </div>
+            <div className="col s12 m8 l8">
+                <div className='row'>
+                    <PieChart 
+                    
+                                getData={data}
+                    />
+                </div>
+            </div>
+            <br /><br /><br /><br /><br />
         </div>
     );
 }

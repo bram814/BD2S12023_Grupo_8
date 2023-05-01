@@ -13,7 +13,7 @@ function Dashboard(props){
     }, []);
 
     return (
-        <div className="container">
+        <div className="row">
             <h5>Datos Personales</h5>
             <Tabs />
         </div>
