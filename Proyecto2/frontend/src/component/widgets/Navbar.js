@@ -33,11 +33,10 @@ function Navbar(props) {
     menu = (
         <ul className="left hide-on-med-and-down">
             <li><Link to={HOME} className="waves-effect waves-light btn orange accent-2 black-text">
-                DASHBOARD
-                <i className="material-icons left">dashboard</i>
+                <i className="material-icons center">dashboard</i>
             </Link></li>
-            <li><Link to={CAR} className="waves-effect waves-light btn light-blue accent-2 black-text">
-                Vehiculo
+            <li><Link to={CAR} className="waves-effect waves-light btn light-red accent-2 black-text">
+                Datos
                 <i className="material-icons left">insert_drive_file</i>
             </Link></li>
 
@@ -51,11 +50,9 @@ function Navbar(props) {
     menuSide = (
         <ul className="left hide-on-med-and-down">
             <li><Link to={HOME} className="waves-effect waves-light btn orange accent-2 black-text">
-                DASHBOARD
-                <i className="material-icons left">dashboard</i>
+                <i className="material-icons center">dashboard</i>
             </Link></li>
-            <li><Link to={CAR} className="waves-effect waves-light btn light-blue accent-2 black-text">
-                Vehiculo
+            <li><Link to={CAR} className="waves-effect waves-light btn light-red accent-2 black-text">
                 <i className="material-icons left">insert_drive_file</i>
             </Link></li>
 
