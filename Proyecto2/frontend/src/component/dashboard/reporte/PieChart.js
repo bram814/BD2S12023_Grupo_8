@@ -15,10 +15,12 @@ const options = {
     },
 
     title: {
-        text: 'Navegadores web utilizados en 2018',
+        text: '',
+        align: 'center',
         style: {
             fontSize: '20px',
             fontFamily: 'Eurostile',
+            align: 'left'
 
         }
     },

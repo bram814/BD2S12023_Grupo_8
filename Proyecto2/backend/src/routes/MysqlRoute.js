@@ -21,16 +21,22 @@ router.get('/users', (req, res) => {
 
 });
 
-router.post('/logout', (req, res) =>{
+router.get('/MySql/R1', (req, res) =>{
     try {
-        var sql = `UPDATE USUARIO 
-                    SET USUARIO.state = 0
-                    WHERE USUARIO.id_user = ?;`;
+        var sql = `SELECT 
+                    CASE 
+                        WHEN	p.edad <18 THEN 'PEDIATRICO'
+                        WHEN p.edad BETWEEN 18 AND 60 THEN 'MEDIANA EDAD'
+                        ELSE 'GENIATRICO' 
+                    END AS CATEGORIA,
+                    COUNT(p.idPaciente) TOTAL_PACIENTES 
+                   FROM PACIENTE p 
+                   GROUP BY CATEGORIA;`;
 
-        var data = [req.body.id_user];
+        var data = [];
 
-        var result = DB_MYSQL.QUERY(sql, data, (result) => {
-            res.status(200).json("OK");
+        DB_MYSQL.QUERY(sql, data, (result) => {
+            res.status(200).json(result);
         });
 
     } catch (e) {
