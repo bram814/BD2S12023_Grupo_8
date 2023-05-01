@@ -349,6 +349,4 @@ router.post('/logactividadesschemas', async (req, res) => {
 });
 
 
-
-
 module.exports = router;
