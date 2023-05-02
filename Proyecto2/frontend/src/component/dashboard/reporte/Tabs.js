@@ -1,7 +1,8 @@
 import M from '@materializecss/materialize/dist/js/materialize.min';
 import React, { useEffect, useState } from 'react';
 import PieChart from './PieChart';
-import { getReporte1, getReporte2, getReporte3, getReporte4, getReporte5, getReporte6, getReporte7, getReporte8 } from '../../../api/MySQL';
+import { getReporte1, getReporte2, getReporte3, getReporte4, getReporte5, getReporte6, getReporte7, getReporte8} from '../../../api/MySQL';
+import { getMongoDBReporte1, getMongoDBReporte2, getMongoDBReporte3, getMongoDBReporte4, getMongoDBReporte5, getMongoDBReporte6, getMongoDBReporte7, getMongoDBReporte8 } from '../../../api/MongoDB';
 
 const Tabs = () => {
 
@@ -28,101 +29,203 @@ const Tabs = () => {
     }
 
     async function buscar() {
+        try {
+            const inicio = performance.now();
+            
+            if (selectBD === '1' && selectReport === '1') {
+                var query = await getReporte1();
+                var result = await query.json();
 
-        const inicio = performance.now();
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${i.CATEGORIA}`, i.TOTAL_PACIENTES])
+                })
 
-        if (selectBD === '1' && selectReport === '1') {
-            var query = await getReporte1();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`${i.CATEGORIA}`, i.TOTAL_PACIENTES])
-            })
+            } else if (selectBD === '1' && selectReport === '2') {
+                var query = await getReporte2();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${i.habitacion}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '2') {
-            var query = await getReporte2();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`${i.habitacion}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '3') {
+                var query = await getReporte3();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${i.genero}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '3') {
-            var query = await getReporte3();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`${i.genero}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '4') {
+                var query = await getReporte4();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`Edad: ${String(i.edad)}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '4') {
-            var query = await getReporte4();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`Edad: ${String(i.edad)}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '5') {
+                var query = await getReporte5();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`Edad: ${String(i.edad)}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '5') {
-            var query = await getReporte5();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`Edad: ${String(i.edad)}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '6') {
+                var query = await getReporte6();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${String(i.habitacion)}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '6') {
-            var query = await getReporte6();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`${String(i.habitacion)}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '7') {
+                var query = await getReporte7();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${String(i.habitacion)}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '7') {
-            var query = await getReporte7();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`${String(i.habitacion)}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '1' && selectReport === '8') {
+                var query = await getReporte8();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`Día: ${String(i.dia)}`, i.CANTIDAD])
+                })
 
-        } else if (selectBD === '1' && selectReport === '8') {
-            var query = await getReporte8();
-            var result = await query.json();
+                setData(tempData);
 
-            var tempData = [];
-            result.map(i => {
-                tempData.push([`Día: ${String(i.dia)}`, i.CANTIDAD])
-            })
+            } else if (selectBD === '2' && selectReport === '1') {
+                var query = await getMongoDBReporte1();
+                var result = await query.json();
 
-            setData(tempData);
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${i.CATEGORIA}`, i.TOTAL_PACIENTES])
+                })
 
+                setData(tempData);
+
+            } else if (selectBD === '2' && selectReport === '2') {
+                var query = await getMongoDBReporte2();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    console.log(i)
+                    tempData.push([`${i.HABITACION}`, i.CANTIDAD])
+                })
+
+                setData(tempData);
+
+            }  else if (selectBD === '2' && selectReport === '3') {
+                var query = await getMongoDBReporte3();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    console.log(i)
+                    tempData.push([`${i._id}`, i.Count])
+                })
+
+                setData(tempData);
+
+            } else if (selectBD === '2' && selectReport === '4') {
+                var query = await getMongoDBReporte4();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    console.log(i)
+                    tempData.push([`Edad: ${i._id}`, i.Total])
+                })
+
+                setData(tempData);
+
+            } else if (selectBD === '2' && selectReport === '5') {
+                var query = await getMongoDBReporte5();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    console.log(i)
+                    tempData.push([`Edad: ${i._id}`, i.Total])
+                })
+
+                setData(tempData);
+
+            }else if (selectBD === '2' && selectReport === '6') {
+                var query = await getMongoDBReporte6();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${String(i.HABITACION)}`, i.CANTIDAD])
+                })
+
+                setData(tempData);
+
+            } else if (selectBD === '2' && selectReport === '7') {
+                var query = await getMongoDBReporte7();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`${String(i.HABITACION)}`, i.CANTIDAD])
+                })
+
+                setData(tempData);
+
+            } else if (selectBD === '2' && selectReport === '8') {
+                var query = await getMongoDBReporte8();
+                var result = await query.json();
+
+                var tempData = [];
+                result.map(i => {
+                    tempData.push([`Día: ${String(i.dia)}`, i.CANTIDAD])
+                })
+
+                setData(tempData);
+
+            }
+
+            const fin = performance.now();
+            setDuracion(fin - inicio);
+        } catch(e) {
+            console.log(e)
+            M.toast({
+                html: `No hay datos!!`,
+                classes: 'red darken-1 rounded',
+
+                });
+            
         }
-
-        const fin = performance.now();
-        setDuracion(fin - inicio);
+        
     }
 
     return (

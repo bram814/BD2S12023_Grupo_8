@@ -219,4 +219,35 @@ router.get('/MySql/R8', (req, res) =>{
 });
 
 
+router.get('/MySql/Paciente', (req, res) =>{
+    try {
+        var sql = `select * from DB_G8.PACIENTE;`;
+
+        var data = [];
+
+        DB_MYSQL.QUERY(sql, data, (result) => {
+            res.status(200).json(result);
+        });
+
+    } catch (e) {
+        res.status(402).json("Error");
+    }
+});
+
+
+router.get('/MySql/Habitacion', (req, res) =>{
+    try {
+        var sql = `select * from DB_G8.HABITACION;`;
+
+        var data = [];
+
+        DB_MYSQL.QUERY(sql, data, (result) => {
+            res.status(200).json(result);
+        });
+
+    } catch (e) {
+        res.status(402).json("Error");
+    }
+});
+
 module.exports = router;
