@@ -250,4 +250,35 @@ router.get('/MySql/Habitacion', (req, res) =>{
     }
 });
 
+router.post('/MySql/LogActividad', (req, res) =>{
+    try {
+        var sql = `insert into DB_G8.LOG_ACTIVIDAD(timestampx, actividad, idPaciente, idHabitacion) VALUES (DATE_FORMAT(sysdate(), '%c/%e/%Y %h:%i:%s %p'), ?, ?, ?);`;
+
+        var data = [req.body.actividad, req.body.idPaciente, req.body.idHabitacion];
+        console.log(data)
+        DB_MYSQL.QUERY(sql, data, (result) => {
+            res.status(200).json(result);
+        });
+
+    } catch (e) {
+        res.status(402).json("Error");
+    }
+});
+
+router.post('/MySql/LogHabitacion', (req, res) =>{
+    try {
+        var sql = `insert into DB_G8.LOG_HABITACION(timestampx, statusx, idHabitacion) VALUES(DATE_FORMAT(sysdate(), '%c/%e/%Y %h:%i:%s %p'), ?, ?);`;
+
+        var data = [req.body.statusx, req.body.idHabitacion];
+        console.log(data)
+        DB_MYSQL.QUERY(sql, data, (result) => {
+            res.status(200).json(result);
+        });
+
+    } catch (e) {
+        res.status(402).json("Error");
+    }
+});
+
+
 module.exports = router;

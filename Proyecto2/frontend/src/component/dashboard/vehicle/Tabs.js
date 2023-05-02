@@ -1,6 +1,6 @@
 import M from '@materializecss/materialize/dist/js/materialize.min';
 import React, { useEffect, useState } from 'react';
-import { getHabitacion, getPaciente } from '../../../api/MySQL';
+import { getHabitacion, getPaciente, addLogActividad, addLogHabitacion } from '../../../api/MySQL';
 
 const Tabs = () => {
 
@@ -13,6 +13,8 @@ const Tabs = () => {
     const [habitacion, setHabitacion] = useState([]);
     const [paciente, setPaciente] = useState([]);
 
+    const [descripcion, setDescripcion] = useState(null);
+
     function handleChangeBD(e) {
         setSelectBD(e.target.value);
     }
@@ -23,6 +25,10 @@ const Tabs = () => {
 
     function handleChangeHabitacion(e) {
         setSelectHabitacion(e.target.value);
+    }
+
+    function handleChangeDescripcion(e) {
+        setDescripcion(e.target.value);
     }
 
     function handleChangePaciente(e) {
@@ -38,8 +44,89 @@ const Tabs = () => {
 
     }, []);
 
+    function empty(obj) {
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop))
+                return false;
+        }
+        return true;
+    }
 
     async function add() {
+        try {
+            if (selectBD === "1") {
+                
+
+                if (selectTipo === "1") { // LogActividad
+                    if (empty(descripcion) || empty(selectHabitacion) || empty(selectPaciente)) {
+                        M.toast({
+                            html: `Debe de ingresar todos los campos.`,
+                            classes: 'red darken-1 rounded',
+
+                        });
+                        return;
+                    }
+                    var query = await addLogActividad(descripcion, selectPaciente, selectHabitacion);
+                    var result = await query.json();
+
+                    if (result.errno != null) {
+                        M.toast({
+                            html: `Ingreso de Datos Incorrectos.`,
+                            classes: 'red darken-1 rounded',
+
+                        });
+                    } else {
+                        M.toast({
+                            html: ` Datos ingresados correctamente a LogActividad.`,
+                            classes: 'green darken-1 rounded',
+
+                        });
+                    }
+                } else if (selectTipo === "2") { // Log Habitación
+                    if (empty(descripcion) || empty(selectHabitacion)) {
+                        M.toast({
+                            html: `Debe de ingresar todos los campos excepto paciente.`,
+                            classes: 'red darken-1 rounded',
+
+                        });
+                        return;
+                    }
+
+                    var query = await addLogHabitacion(descripcion, selectHabitacion);
+                    var result = await query.json();
+
+                    if (result.errno != null) {
+                        M.toast({
+                            html: `Ingreso de Datos Incorrectos.`,
+                            classes: 'red darken-1 rounded',
+
+                        });
+                    } else {
+                        M.toast({
+                            html: ` Datos ingresados correctamente a LogHabitacion.`,
+                            classes: 'green darken-1 rounded',
+
+                        });
+                    }
+
+                } else {
+                    M.toast({
+                        html: ` Debe de seleccionar un Tipo.`,
+                        classes: 'red darken-1 rounded',
+
+                    });
+                }
+
+            }
+
+        } catch (e) {
+
+            M.toast({
+                html: `${e}`,
+                classes: 'red darken-1 rounded',
+
+            });
+        }
 
     }
 
@@ -109,7 +196,7 @@ const Tabs = () => {
                     <div className="row">
                         <div className="input-field col s12 m12 l12">
                             <i className="material-icons prefix">account_circle</i>
-                            <input id="icon_prefix" type="text" className="validate" />
+                            <input id="icon_prefix" type="text" className="validate" onChange={handleChangePaciente} />
                             <label for="icon_prefix">Paciente</label>
                         </div>
                     </div>
@@ -123,7 +210,7 @@ const Tabs = () => {
 
                 <div className="col s12 m12 l12">
                     <div className="input-field col s12">
-                        <textarea id="textarea1" className="materialize-textarea" ></textarea>
+                        <textarea id="textarea1" className="materialize-textarea" onChange={handleChangeDescripcion}></textarea>
                         <label htmlFor="textarea1">Descripción</label>
                     </div>
                 </div>
