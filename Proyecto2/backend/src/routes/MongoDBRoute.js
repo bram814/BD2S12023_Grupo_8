@@ -141,10 +141,80 @@ router.get('/consulta2', async (req, res) => {
     }
 });
 // Ruta consulta 3
-
+router.get('/consulta3', async (req, res) => {
+    try {
+        const pacientes = await PacienteSchema.aggregate([
+            {
+                $group: {
+                  _id: "$genero",
+                  Count: { $sum: 1 },
+                },
+              }
+            ]);
+            res.json(pacientes);
+    } catch (error) {
+        console.error('Error en la conexión a MongoDB:', error);
+        res.status(500).send('No se pudo conectar a MongoDB');
+    }
+});
 // Ruta consulta 4
+router.get('/consulta4', async (req, res) => {
+    try {
+        const pacientes = await PacienteSchema.aggregate([
+            {
+                $group: {
+                _id: "$edad",
+                Total: {
+                    $sum: 1,
+                },
+                },
+            },
+            {
+                $sort: {
+                Total: -1,
+                },
+            },
+            {
+                $limit: 5,
+            }
+            ]);
+            res.json(pacientes);
+    } catch (error) {
+        console.error('Error en la conexión a MongoDB:', error);
+        res.status(500).send('No se pudo conectar a MongoDB');
+    }
+});
+
 
 // Ruta consulta 5
+router.get('/consulta5', async (req, res) => {
+    try {
+        const pacientes = await LogActividadesSchema.aggregate([
+            {
+                $group: {
+                _id: "$edad",
+                Total: {
+                    $sum: 1,
+                },
+                },
+            },
+            {
+                $sort: {
+                Total: 1,
+                },
+            },
+            {
+                $limit: 5,
+            }
+            ]);
+            res.json(pacientes);
+    } catch (error) {
+        console.error('Error en la conexión a MongoDB:', error);
+        res.status(500).send('No se pudo conectar a MongoDB');
+    }
+});
+
+
 
 // Ruta consulta 6
 router.get('/consulta6', async (req, res) => {
@@ -237,48 +307,15 @@ router.get('/consulta7', async (req, res) => {
 // Dia con mas pacientes en la clinica
 router.get('/consulta8', async (req, res) => {
     try {
-        const pacientes = await PacienteSchema.aggregate([
-            {
-                $lookup: {
-                from: "logactividadschemas",
-                localField: "idPaciente",
-                foreignField: "idPaciente",
-                as: "log_actividad"
-                }
-            },
-            {
-                $unwind: "$log_actividad"
-            },
+        const actividad = LogActividadesSchema.aggregate([
             {
                 $group: {
-                _id: {
-                    $dateToString: {
-                    date: {
-                        $dateFromString: {
-                        dateString: "$log_actividad.timestampx"
-                        }
-                    }
-                    }
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+                total: { $sum: 1 },
                 },
-                CANTIDAD: { $sum: 1 }
-                }
             },
-            {
-                $sort: {
-                CANTIDAD: -1,
-                _id: 1
-                }
-            },
-            {
-                $limit: 1
-            },
-            {
-                $project: {
-                _id: 0,
-                DIA: "$_id",
-                CANTIDAD: 1
-                }
-            }
+            { $sort: { total: -1 } },
+            { $limit: 1 }
             ]);
             res.json(pacientes);
     } catch (error) {
