@@ -9,5 +9,8 @@ module.exports = {
     DB_PASS:    process.env.DB_PASS     || 'admin',
     DB_NAME:    process.env.DB_NAME     || 'db_practica2',
     DB_PORT:    process.env.DB_PORT     || '3306',
-
+    /* DB MONGO */
+    DB_HOST_MONGO:   process.env.DB_HOST_MONGO     || 'admin',
+    DB_NAME_MONGO:  process.env.DB_NAME_MONGO     || 'BASES2',
+    DB_PASS_MONGO:  process.env.DB_PASS_MONGO     || 'bases2',
 }

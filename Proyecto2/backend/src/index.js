@@ -7,6 +7,7 @@ app.use(cors());
 // imports
 const getMysqlRoute = require('./routes/MysqlRoute.js');
 // mongodb
+const getMongoDbRoute = require('./routes/MongoDBRoute.js');
 // cassandra
 // redis
 const config = require('./config/env.js');
@@ -22,6 +23,7 @@ app.use(express.urlencoded({extended:false}));  // Sirve para enviar fotos o vid
 // Routes
 app.use(getMysqlRoute);
 // mongodb
+app.use(getMongoDbRoute);
 // cassandra
 // redis
 
