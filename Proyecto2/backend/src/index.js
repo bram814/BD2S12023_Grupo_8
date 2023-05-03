@@ -25,6 +25,7 @@ app.use(getMysqlRoute);
 // mongodb
 app.use(getMongoDbRoute);
 // cassandra
+app.use("/cassandra", require("./routes/CassandraRoute.js"));
 // redis
 
 //Run
