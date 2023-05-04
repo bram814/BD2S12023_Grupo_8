@@ -324,5 +324,31 @@ router.get('/consulta8', async (req, res) => {
     }
 });
 
+// Post de loghabitacionesschemas
+router.post('/loghabitacionesschemas', async (req, res) => {
+    try {
+        const loghabitacionesschemas = new LogHabitacionesSchema(req.body);
+        await loghabitacionesschemas.save();
+        res.json({ status: 'LogHabitacionesSchema guardado' });
+    } catch (error) {
+        console.error('Error en la conexión a MongoDB:', error);
+        res.status(500).send('No se pudo conectar a MongoDB');
+    }
+});
+
+//Post de logactividadesschemas
+router.post('/logactividadesschemas', async (req, res) => {
+    try {
+        const logactividadesschemas = new LogActividadesSchema(req.body);
+        await logactividadesschemas.save();
+        res.json({ status: 'LogActividadesSchema guardado' });
+    } catch (error) {
+        console.error('Error en la conexión a MongoDB:', error);
+        res.status(500).send('No se pudo conectar a MongoDB');
+    }
+});
+
+
+
 
 module.exports = router;
